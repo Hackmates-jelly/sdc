@@ -5,6 +5,7 @@
   "main": "index.js",
   "scripts": {
     "start": "nodemon server/index.js",
+    "startAPI": "nodemon api_server/index.js",
     "react-dev": "webpack --config webpack.dev-config.js --watch",
     "react-prod": "webpack --config webpack.prod-config.js --watch",
     "test": "jest"
@@ -48,6 +49,7 @@
     "express": "^4.17.1",
     "nodemon": "^2.0.12",
     "path": "^0.12.7",
+    "pg": "^8.7.1",
     "prop-types": "^15.7.2",
     "react": "^17.0.2",
     "react-dom": "^17.0.2",
