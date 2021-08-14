@@ -19,7 +19,7 @@ const getQuestions = async (product_id, page, count) => {
 };
 
 const getAnswers = (question_id) => {
-  const text = 'SELECT id, body, date_written, answerer_name, helpful FROM answers where question_id=($1) ORDER BY id ASC)';
+  const text = 'SELECT id, body, date_written, answerer_name, helpful FROM answers where question_id=($1) ORDER BY id ASC';
   const values = [question_id];
 
   return new Promise((resolve, reject) => {
