@@ -173,10 +173,19 @@ app.post('/qa/questions', (req, res) => {
   const { name } = req.body;
   const { email } = req.body;
   const { product_id } = req.body;
+  const date = new Date().getTime();
+  // const date = aDate.toISOString();
+  const reported = 0;
+  const helpful = 0;
 
-  res.send({
-    body, name, email, product_id,
-  });
+  db.addQuestion(product_id, body, date, name, email, reported, helpful)
+    .then(() => {
+      res.sendStatus(201);
+    })
+    .catch((err) => {
+      console.log(err);
+      res.send(err);
+    });
 });
 
 app.post('/qa/questions/:question_id/answers', (req, res) => {
@@ -185,6 +194,19 @@ app.post('/qa/questions/:question_id/answers', (req, res) => {
   const { name } = req.body;
   const { email } = req.body;
   const { photos } = req.body;
+  const date = new Date().getTime();
+  // const date = aDate.toISOString();
+  const reported = 0;
+  const helpful = 0;
+
+  db.addAnswer(question_id, body, date, name, email, reported, helpful, photos)
+    .then(() => {
+      res.sendStatus(201);
+    })
+    .catch((err) => {
+      console.log(err);
+      res.send(err);
+    });
 
   // res.send({ hi: '123' });
 });
