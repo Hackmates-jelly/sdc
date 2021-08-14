@@ -18,9 +18,20 @@ const getQuestions = async (product_id, page, count) => {
   return result.rows;
 };
 
-const getAnswers = (question_id) => {
+const getAnswersNoLimit = (question_id) => {
   const text = 'SELECT id, body, date_written, answerer_name, helpful FROM answers where question_id=($1) ORDER BY id ASC';
   const values = [question_id];
+
+  return new Promise((resolve, reject) => {
+    client.query(text, values)
+      .then((result) => resolve(result.rows))
+      .catch((err) => reject(err));
+  });
+};
+
+const getAnswers = (question_id, count) => {
+  const text = 'SELECT id, body, date_written, answerer_name, helpful FROM answers where question_id=($1) ORDER BY id ASC LIMIT ($2)';
+  const values = [question_id, count];
 
   return new Promise((resolve, reject) => {
     client.query(text, values)
@@ -42,4 +53,5 @@ const getPhotos = (answer_id) => {
 
 module.exports.getQuestions = getQuestions;
 module.exports.getAnswers = getAnswers;
+module.exports.getAnswersNoLimit = getAnswersNoLimit;
 module.exports.getPhotos = getPhotos;

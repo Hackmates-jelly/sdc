@@ -17,10 +17,6 @@ app.listen(port, () => {
   console.log(`listening on port ${port}`);
 });
 
-// PARAMS
-// product_id
-// page
-// count
 app.get('/qa/questions', async (req, res) => {
   const { product_id } = req.query;
   let { page } = req.query;
@@ -57,7 +53,7 @@ app.get('/qa/questions', async (req, res) => {
     resultsObj[question.id] = newQuestionObj;
 
     promises.push(
-      db.getAnswers(question.id)
+      db.getAnswersNoLimit(question.id)
         .then((answerRows) => {
           answerRows.forEach((answer) => {
             const oneAnswer = {};
@@ -112,12 +108,64 @@ app.get('/qa/questions', async (req, res) => {
     });
 });
 
-app.get('/qa/questions/:question_id/answers', (req, res) => {
+app.get('/qa/questions/:question_id/answers', async (req, res) => {
   const { question_id } = req.params;
-  const { page } = req.query;
-  const { count } = req.query;
+  let { page } = req.query;
+  let { count } = req.query;
 
-  res.send({ hi: question_id });
+  if (count === undefined) {
+    count = 5;
+  }
+  if (page === undefined) {
+    page = 1;
+  }
+
+  const returnData = { "question": question_id.toString(), "page": page, "count": count };
+  const resultsArr = [];
+  const resultsObj = {};
+  const aIds = [];
+  const promises = [];
+  const answersArr = await db.getAnswers(question_id, count);
+
+  answersArr.forEach((answer) => {
+    const newAnswerObj = {};
+    newAnswerObj["answer_id"] = answer.id;
+    aIds.push(answer.id);
+    newAnswerObj["body"] = answer.body;
+    const aDate = new Date(parseInt(answer.date_written, 10));
+    newAnswerObj["date"] = aDate.toISOString();
+    newAnswerObj["answerer_name"] = answer.answerer_name;
+    newAnswerObj["helpfulness"] = answer.helpful;
+    newAnswerObj["photos"] = {};
+    resultsObj[answer.id] = newAnswerObj;
+
+    promises.push(
+      db.getPhotos(answer.id)
+        .then((photoResult) => {
+          const photoRows = photoResult;
+          const photosArr = [];
+          photoRows.forEach((row) => {
+            photosArr.push(row.url);
+          });
+          resultsObj[answer.id]["photos"] = photosArr;
+        })
+        .catch((err) => {
+          res.send(err);
+        }),
+    );
+  });
+
+  Promise.all(promises)
+    .then(() => {
+      Object.keys(resultsObj).forEach((key) => {
+        resultsArr.push(resultsObj[key]);
+      });
+      returnData["results"] = resultsArr;
+      res.send(returnData);
+    })
+    .catch((err) => {
+      res.send(err);
+    });
 });
 
 app.post('/qa/questions', (req, res) => {
@@ -160,19 +208,6 @@ app.put('/qa/answers/:answer_id/report', (req, res) => {
   const { answer_id } = req.params;
   // res.send({ hi: '123' });
 });
-
-// app.get('/questions', (req, res) => {
-//   $.ajax({
-//     method: 'GET',
-//     url: `https://app-hrsei-api.herokuapp.com/api/fec2/hr-sea/qa/questions?product_id=${req.query.productId}&page=1&count=50`,
-//     success: (data) => {
-//       res.send(data);
-//     },
-//     error: (err) => {
-//       res.sendStatus(500, err);
-//     }
-//   })
-// });
 
 // need to listen to:
 // /GET questions
