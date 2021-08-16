@@ -12,8 +12,9 @@ const client = new Client({
 client.connect();
 
 const getQuestions = async (product_id, page, count) => {
-  const text = 'SELECT id, body, date_written, asker_name, helpful, reported FROM questions where product_id=($1) ORDER BY id ASC LIMIT ($2)';
-  const values = [product_id, count];
+  const text = 'SELECT id, body, date_written, asker_name, helpful, reported FROM questions where product_id=($1) ORDER BY id ASC OFFSET ($2) LIMIT ($3)';
+  const offset = count * (page - 1);
+  const values = [product_id, offset, count];
   const result = await client.query(text, values);
   return result.rows;
 };
@@ -29,9 +30,10 @@ const getAnswersNoLimit = (question_id) => {
   });
 };
 
-const getAnswers = (question_id, count) => {
-  const text = 'SELECT id, body, date_written, answerer_name, helpful FROM answers where question_id=($1) ORDER BY id ASC LIMIT ($2)';
-  const values = [question_id, count];
+const getAnswers = (question_id, page, count) => {
+  const text = 'SELECT id, body, date_written, answerer_name, helpful FROM answers where question_id=($1) ORDER BY id ASC OFFSET ($2) LIMIT ($3)';
+  const offset = count * (page - 1);
+  const values = [question_id, offset, count];
 
   return new Promise((resolve, reject) => {
     client.query(text, values)
@@ -70,7 +72,6 @@ const addAnswer = (question_id, body, date, name, email, reported, helpful, phot
   return new Promise((resolve, reject) => {
     client.query(text, values)
       .then((answerResult) => {
-        let test = 0;
         const { id } = answerResult.rows[0];
         photos.forEach((photoUrl) => {
           const photosText = 'INSERT INTO ANSWERS_PHOTOS (answer_id, url) VALUES (($1), ($2))';
@@ -96,9 +97,9 @@ const addAnswer = (question_id, body, date, name, email, reported, helpful, phot
   });
 };
 
-const questionHelpful = (answer_id) => {
-  const text = 'SELECT url FROM answers_photos where answer_id=($1) ORDER BY id ASC';
-  const values = [answer_id];
+const questionHelpful = (question_id) => {
+  const text = 'UPDATE questions SET helpful = helpful + 1 WHERE id = ($1)';
+  const values = [question_id];
 
   return new Promise((resolve, reject) => {
     client.query(text, values)
@@ -107,9 +108,9 @@ const questionHelpful = (answer_id) => {
   });
 };
 
-const reportQuestion = (answer_id) => {
-  const text = 'SELECT url FROM answers_photos where answer_id=($1) ORDER BY id ASC';
-  const values = [answer_id];
+const reportQuestion = (question_id) => {
+  const text = 'UPDATE questions SET reported = reported + 1 WHERE id = ($1)';
+  const values = [question_id];
 
   return new Promise((resolve, reject) => {
     client.query(text, values)
@@ -119,7 +120,7 @@ const reportQuestion = (answer_id) => {
 };
 
 const answerHelpful = (answer_id) => {
-  const text = 'SELECT url FROM answers_photos where answer_id=($1) ORDER BY id ASC';
+  const text = 'UPDATE answers SET helpful = helpful + 1 WHERE id = ($1)';
   const values = [answer_id];
 
   return new Promise((resolve, reject) => {
@@ -130,7 +131,7 @@ const answerHelpful = (answer_id) => {
 };
 
 const reportAnswer = (answer_id) => {
-  const text = 'SELECT url FROM answers_photos where answer_id=($1) ORDER BY id ASC';
+  const text = 'UPDATE answers SET reported = reported + 1 WHERE id = ($1)';
   const values = [answer_id];
 
   return new Promise((resolve, reject) => {

@@ -4,9 +4,11 @@
 /* eslint-disable quotes */
 const express = require('express');
 const db = require('../database/index.js');
+const cors = require('cors');
 
 const app = express();
-const port = 3000;
+app.use(cors());
+const port = 3001;
 
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
@@ -125,7 +127,7 @@ app.get('/qa/questions/:question_id/answers', async (req, res) => {
   const resultsObj = {};
   const aIds = [];
   const promises = [];
-  const answersArr = await db.getAnswers(question_id, count);
+  const answersArr = await db.getAnswers(question_id, page, count);
 
   answersArr.forEach((answer) => {
     const newAnswerObj = {};
@@ -213,30 +215,48 @@ app.post('/qa/questions/:question_id/answers', (req, res) => {
 
 app.put('/qa/questions/:question_id/helpful', (req, res) => {
   const { question_id } = req.params;
-  // res.send({ hi: '123' });
+  db.questionHelpful(question_id)
+    .then(() => {
+      res.sendStatus(204);
+    })
+    .catch((err) => {
+      console.log(err);
+      res.sendStatus(500);
+    });
 });
 
 app.put('/qa/questions/:question_id/report', (req, res) => {
   const { question_id } = req.params;
-  // res.send({ hi: '123' });
+  db.reportQuestion(question_id)
+    .then(() => {
+      res.sendStatus(204);
+    })
+    .catch((err) => {
+      console.log(err);
+      res.sendStatus(500);
+    });
 });
 
 app.put('/qa/answers/:answer_id/helpful', (req, res) => {
   const { answer_id } = req.params;
-  // res.send({ hi: '123' });
+  db.answerHelpful(answer_id)
+    .then(() => {
+      res.sendStatus(204);
+    })
+    .catch((err) => {
+      console.log(err);
+      res.sendStatus(500);
+    });
 });
 
 app.put('/qa/answers/:answer_id/report', (req, res) => {
   const { answer_id } = req.params;
-  // res.send({ hi: '123' });
+  db.reportAnswer(answer_id)
+    .then(() => {
+      res.sendStatus(204);
+    })
+    .catch((err) => {
+      console.log(err);
+      res.sendStatus(500);
+    });
 });
-
-// need to listen to:
-// /GET questions
-// /GET answers
-// /POST question
-// /POST answer
-// /PUT helpful?
-// /PUT report?
-// /PUT helpfulA
-// /PUT reportA
